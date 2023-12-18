@@ -176,10 +176,10 @@ function ConROC:SpellmenuClass()
 	  {
 	    frameName = "Options",
 	    spells = {
-	    	--{spellID = ids.optionMaxIds.Metamorphosis, spellCheckbox = "Option_Metamorphosis", reqLevel = 60, type="spell"},
-	    	--{spellID = ids.optionMaxIds.DrainSoul, spellCheckbox = "Option_SoulShard", reqLevel = 10, type="textfield", icon=134075, customName="Minimum Soul Shards"},
-		    --{spellID = "Use Prepull actions", spellCheckbox = "Option_PrePull", reqLevel = 15, type="custom", icon=237511, customName="Use Prepull actions"},
-	    	{spellID = "AoE Toggle Button", spellCheckbox = "Option_AoE", reqLevel = 20, type="aoetoggler"},
+	    	--{spellID = "Use Prepull actions", spellCheckbox = "Option_PrePull", reqLevel = 15, type="custom", icon=237511, customName="Use Prepull actions"},
+		    {spellID = "Weapon imbue reminder", spellCheckbox = "Option_Imbue", reqLevel = 1, type="custom", icon=136086, customName="Weapon imbue reminder"},
+		    {spellID = "Suggest totems in rotation", spellCheckbox = "Option_Totems", reqLevel = 10, type="custom", icon=310730, customName="Suggest totems in rotation"},
+	    	{spellID = "AoE toggle Button", spellCheckbox = "Option_AoE", reqLevel = 20, type="aoetoggler"},
 	    	--{spellID = "Use Wand", spellCheckbox = "Option_UseWand", reqLevel = 5, type="wand"}
 	    }
 	  }
@@ -787,7 +787,7 @@ function ConROC:OptionNone(_spellData, i, j, _spellFrame, _checkType, _radioButt
     lastFrame:Show();
 end
 
-function ConROC:SpellMenuUpdate()
+function ConROC:SpellMenuUpdate(newSpell)
     lastFrame = ConROCScrollChild;
     local anyHLVisible = false;
     scrollHeight = 0;
@@ -1040,6 +1040,9 @@ function ConROC:SpellMenuUpdate()
         ConROCScrollContainer:Show();
         ConROCScrollChild:Show();
     end
+	if newSpell then
+		ConROC:closeSpellmenu();
+	end
 end
 
 function flashMessage()

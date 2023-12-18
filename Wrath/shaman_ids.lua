@@ -350,3 +350,7 @@ local ConROC_Shaman, ids = ...;
 		["Earthliving Weapon"] = {3345,3346,3347,3348,3349,3350},
 		["Windfury Weapon"] = {283,284,525,1669,2636,3785,3786,3787},
 	}
+	ids.Items = {
+		HordLance = 46070,
+		AllianceLance = 46069,
+	}

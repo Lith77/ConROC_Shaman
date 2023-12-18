@@ -154,6 +154,7 @@ local _HealingWave = Resto_Ability.HealingWaveRank1;
 local _ManaSpringTotem = Resto_Ability.ManaSpringTotemRank1;
 local _ManaTideTotem = Resto_Ability.ManaTideTotemRank1;
 
+function ConROC:UpdateSpellID()
 --Ranks
 --Elemental
 if IsSpellKnown(Ele_Ability.ChainLightningRank4) then _ChainLightning = Ele_Ability.ChainLightningRank4;
@@ -371,6 +372,8 @@ ids.optionMaxIds = {
 	ManaSpringTotem = _ManaSpringTotem,
 	ManaTideTotem = _ManaTideTotem,
 }
+end
+ConROC:UpdateSpellID()
 function ConROC:EnableRotationModule()
 	self.Description = 'Shaman';
 	self.NextSpell = ConROC.Shaman.Damage;
@@ -384,19 +387,12 @@ function ConROC:EnableRotationModule()
 end
 function ConROC:PLAYER_TALENT_UPDATE()
 	ConROC:SpecUpdate();
-	if ConROCSpellmenuFrame:IsVisible() then
-		ConROCSpellmenuFrame_CloseButton:Hide();
-		ConROCSpellmenuFrame_Title:Hide();
-		ConROCSpellmenuClass:Hide();
-		ConROCSpellmenuFrame_OpenButton:Show();
-		optionsOpened = false;
-		ConROCSpellmenuFrame:SetSize((90) + 14, (15) + 14)
-	else
-		ConROCSpellmenuFrame:SetSize((90) + 14, (15) + 14)
-	end
+    ConROC:closeSpellmenu();
 end
 
 function ConROC.Shaman.Damage(_, timeShift, currentSpell, gcd)
+ConROC:UpdateSpellID()
+
 --Character
 	local plvl 												= UnitLevel('player');
 	
@@ -477,6 +473,9 @@ function ConROC.Shaman.Damage(_, timeShift, currentSpell, gcd)
 
 --Conditions
 	local incombat 											= UnitAffectingCombat('player');
+    local resting = IsResting()
+    local mounted = IsMounted()
+    local onVehicle = UnitHasVehicleUI("player")
 	local inMelee											= CheckInteractDistance('target', 3);
 	local targetPh 											= ConROC:PercentHealth('target');
 	local moving 											= ConROC:PlayerSpeed();
@@ -492,122 +491,95 @@ function ConROC.Shaman.Damage(_, timeShift, currentSpell, gcd)
 	end
 	--print(offHandType())
 --Indicators
---[[	
-	ConROC:AbilityRaidBuffs(_RockbiterWeapon, rbWepRDY and plvl < 30 and not hasMHEnch);	
-	if ConROC:CheckBox(ConROC_SM_MH_WindfuryWeapon) and wfWepRDY then
-		ConROC:AbilityRaidBuffs(_WindfuryWeapon, wfWepRDY and not hasMHEnch);
-	end
-	if ConROC:CheckBox(ConROC_SM_MH_FlametongueWeapon) and ftWepRDY then
-		ConROC:AbilityRaidBuffs(_FlametongueWeapon, ftWepRDY and not hasMHEnch);
-	end
-	if ConROC:CheckBox(ConROC_SM_OH_FlametongueWeapon) and ConROC:CheckBox(ConROC_SM_MH_FlametongueWeapon) and ftWepDRRDY then
-		ConROC:AbilityRaidBuffs(_FlametongueWeaponDR, ftWepDRRDY and not hasOHEnch);
-	end
-	if ConROC:CheckBox(ConROC_SM_OH_FlametongueWeapon) and not ConROC:CheckBox(ConROC_SM_MH_FlametongueWeapon) and ftWepRDY then
-		ConROC:AbilityRaidBuffs(_FlametongueWeapon, ftWepRDY and not hasOHEnch);
-	end
---]]
 --Warnings
+    if not (mounted or onVehicle or resting) then
+    	_tickerVar = _tickerVar + 1
+        local hasMainHandEnchant,
+            mainHandExpiration,
+            mainHandCharges,
+            mainHandEnchantID,
+            hasOffHandEnchant,
+            offHandExpiration,
+            offHandCharges,
+            offHandEnchantId = GetWeaponEnchantInfo()
+        if mainHandExpiration then
+        	mhExp = mainHandExpiration / 1000
+        else
+            mhExp = 0
+        end
+        if offHandExpiration then
+            ohExp = offHandExpiration / 1000
+        else
+            ohExp = 0
+        end
 
-
-	_tickerVar = _tickerVar + 1
-    local hasMainHandEnchant,
-        mainHandExpiration,
-        mainHandCharges,
-        mainHandEnchantID,
-        hasOffHandEnchant,
-        offHandExpiration,
-        offHandCharges,
-        offHandEnchantId = GetWeaponEnchantInfo()
-    if mainHandExpiration then
-    	mhExp = mainHandExpiration / 1000
-    else
-        mhExp = 0
-    end
-    if offHandExpiration then
-        ohExp = offHandExpiration / 1000
-    else
-        ohExp = 0
-    end
-
-    if _tickerVar >= 1 then
-        if not mounted and (not resting) then
-            
-            if ConROC:CheckBox(ConROC_SM_MH_FlametongueWeapon) and IsSpellKnown(_FlametongueWeapon) then
-            	ConROC:ChooseImbue(_FlametongueWeapon, true, mainHandEnchantID); -- spellID, isMainhand, enchantID
-            end
-
-            if ConROC:CheckBox(ConROC_SM_MH_FrostbrandWeapon) and IsSpellKnown(_FrostbrandWeapon) then
-                ConROC:ChooseImbue(_FrostbrandWeapon, true, mainHandEnchantID); -- spellID, isMainhand, enchantID
-            end
-
-            if ConROC:CheckBox(ConROC_SM_MH_RockbiterWeapon) and IsSpellKnown(_RockbiterWeapon) then
-            	ConROC:ChooseImbue(_RockbiterWeapon, true, mainHandEnchantID); -- spellID, isMainhand, enchantID
-            end
---[[
-            if ConROC:CheckBox(ConROC_SM_MH_EarthlivingWeapon) and IsSpellKnown(_EarthlivingWeapon) then
-                ConROC:ChooseImbue(_EarthlivingWeapon, true, mainHandEnchantID); -- spellID, isMainhand, enchantID
-            end
---]]
-            if ConROC:CheckBox(ConROC_SM_MH_WindfuryWeapon) and IsSpellKnown(_WindfuryWeapon) then
-                ConROC:ChooseImbue(_WindfuryWeapon, true, mainHandEnchantID); -- spellID, isMainhand, enchantID
-            end
-            if offHandType() then
-            	if ConROC:CheckBox(ConROC_SM_OH_FlametongueWeapon) and IsSpellKnown(_FlametongueWeapon) then
-	                if ConROC:CheckBox(ConROC_SM_MH_FlametongueWeapon) then
-	                	ConROC:ChooseImbue(_FlametongueWeaponDR, false, offHandEnchantId); -- spellID, isMainhand, enchantID
-	                else
-	                	ConROC:ChooseImbue(_FlametongueWeapon, false, offHandEnchantId); -- spellID, isMainhand, enchantID
-	                end  
-	            end
-
-	            if ConROC:CheckBox(ConROC_SM_OH_FrostbrandWeapon) and IsSpellKnown(_FrostbrandWeapon) then
-	                ConROC:ChooseImbue(_FrostbrandWeapon, false, offHandEnchantId); -- spellID, isMainhand, enchantID
-	            end
-
-	            if ConROC:CheckBox(ConROC_SM_OH_RockbiterWeapon) and IsSpellKnown(_RockbiterWeapon) then
-	                ConROC:ChooseImbue(_RockbiterWeapon, false, offHandEnchantId); -- spellID, isMainhand, enchantID
-	            end
---[[
-                if ConROC:CheckBox(ConROC_SM_OH_EarthlivingWeapon) and IsSpellKnown(_EarthlivingWeapon) then
-                    ConROC:ChooseImbue(_EarthlivingWeapon, false, offHandEnchantId); -- spellID, isMainhand, enchantID
+        if _tickerVar >= 1 then
+            if ConROC:CheckBox(ConROC_SM_Option_Imbue) then
+                
+                if ConROC:CheckBox(ConROC_SM_MH_FlametongueWeapon) and IsSpellKnown(_FlametongueWeapon) then
+                	ConROC:ChooseImbue(_FlametongueWeapon, true, mainHandEnchantID); -- spellID, isMainhand, enchantID
                 end
-]]
-	            if ConROC:CheckBox(ConROC_SM_OH_WindfuryWeapon) and IsSpellKnown(_WindfuryWeapon) then
-	                ConROC:ChooseImbue(_WindfuryWeapon, false, offHandEnchantId); -- spellID, isMainhand, enchantID
-	            end
-			else
-				_ohP = "none"
-                _ohEnchID = false
-				_ohTexture = "0,0,0,0";	
-	        end
-            if ConROC:CheckBox(ConROC_SM_MH_None) then
+
+                if ConROC:CheckBox(ConROC_SM_MH_FrostbrandWeapon) and IsSpellKnown(_FrostbrandWeapon) then
+                    ConROC:ChooseImbue(_FrostbrandWeapon, true, mainHandEnchantID); -- spellID, isMainhand, enchantID
+                end
+
+                if ConROC:CheckBox(ConROC_SM_MH_RockbiterWeapon) and IsSpellKnown(_RockbiterWeapon) then
+                	ConROC:ChooseImbue(_RockbiterWeapon, true, mainHandEnchantID); -- spellID, isMainhand, enchantID
+                end
+                if ConROC:CheckBox(ConROC_SM_MH_WindfuryWeapon) and IsSpellKnown(_WindfuryWeapon) then
+                    ConROC:ChooseImbue(_WindfuryWeapon, true, mainHandEnchantID); -- spellID, isMainhand, enchantID
+                end
+                if offHandType() then
+                	if ConROC:CheckBox(ConROC_SM_OH_FlametongueWeapon) and IsSpellKnown(_FlametongueWeapon) then
+    	                if ConROC:CheckBox(ConROC_SM_MH_FlametongueWeapon) then
+    	                	ConROC:ChooseImbue(_FlametongueWeaponDR, false, offHandEnchantId); -- spellID, isMainhand, enchantID
+    	                else
+    	                	ConROC:ChooseImbue(_FlametongueWeapon, false, offHandEnchantId); -- spellID, isMainhand, enchantID
+    	                end  
+    	            end
+
+    	            if ConROC:CheckBox(ConROC_SM_OH_FrostbrandWeapon) and IsSpellKnown(_FrostbrandWeapon) then
+    	                ConROC:ChooseImbue(_FrostbrandWeapon, false, offHandEnchantId); -- spellID, isMainhand, enchantID
+    	            end
+
+    	            if ConROC:CheckBox(ConROC_SM_OH_RockbiterWeapon) and IsSpellKnown(_RockbiterWeapon) then
+    	                ConROC:ChooseImbue(_RockbiterWeapon, false, offHandEnchantId); -- spellID, isMainhand, enchantID
+    	            end
+    	            if ConROC:CheckBox(ConROC_SM_OH_WindfuryWeapon) and IsSpellKnown(_WindfuryWeapon) then
+    	                ConROC:ChooseImbue(_WindfuryWeapon, false, offHandEnchantId); -- spellID, isMainhand, enchantID
+    	            end
+    			else
+    				_ohP = "none"
+                    _ohEnchID = false
+    				_ohTexture = "0,0,0,0";	
+    	        end
+                if ConROC:CheckBox(ConROC_SM_MH_None) then
+                    _mhP = "none"
+                    _mhEnchID = false
+    				_mhTexture = "0,0,0,0";	
+                end
+                if ConROC:CheckBox(ConROC_SM_OH_None) then
+                    _ohP = "none"
+                    _ohEnchID = false
+    				_ohTexture = "0,0,0,0";	
+                end
+            end
+            _tickerVar = 0
+
+            if _mhP == nil then
                 _mhP = "none"
                 _mhEnchID = false
-				_mhTexture = "0,0,0,0";	
+    			_mhTexture = "0,0,0,0";	
             end
-            if ConROC:CheckBox(ConROC_SM_OH_None) then
-                _ohP = "none"
+            if _ohP == nil then
+                _ohp = "none"
                 _ohEnchID = false
-				_ohTexture = "0,0,0,0";	
+    			_ohTexture = "0,0,0,0";	
             end
-        end
-        _tickerVar = 0
 
-        if _mhP == nil then
-            _mhP = "none"
-            _mhEnchID = false
-			_mhTexture = "0,0,0,0";	
-        end
-        if _ohP == nil then
-            _ohp = "none"
-            _ohEnchID = false
-			_ohTexture = "0,0,0,0";	
-        end
-
-        if (mainHandEnchantID ~= _mhEnchID or offHandEnchantId ~= _ohEnchID) and (_mhP ~= "none" or _ohP ~= "none") then
-            if not (resting or incombat or mounted) then
-                --print("showing apply poison")
+            if (mainHandEnchantID ~= _mhEnchID or offHandEnchantId ~= _ohEnchID) and (_mhP ~= "none" or _ohP ~= "none") then
+            if ConROC:CheckBox(ConROC_SM_Option_Imbue) then --and not (resting or incombat or mounted or onVehicle) then
                 ConROC:ApplyImbue(_mhP, _mhTexture, _ohP, _ohTexture)
                 if not ConROCApplyImbueFrame:IsShown() then
                     ConROCApplyImbueFrame:Show()
@@ -615,8 +587,9 @@ function ConROC.Shaman.Damage(_, timeShift, currentSpell, gcd)
             end
         end
         if ConROCApplyImbueFrame:IsShown() then
-            if
-                (resting or mounted and not incombat) or (_mhP == "none" and _ohP == "none") or
+            if not ConROC:CheckBox(ConROC_SM_Option_Imbue) or
+                --(resting or mounted or onVehicle and not incombat) or 
+                (_mhP == "none" and _ohP == "none") or
                     (mainHandEnchantID == _mhEnchID and
                         offHandEnchantId == _ohEnchID) or
                     (mainHandEnchantID == _mhEnchID and _ohP == "none") or
@@ -625,6 +598,9 @@ function ConROC.Shaman.Damage(_, timeShift, currentSpell, gcd)
                 ConROCApplyImbueFrame:Hide()
             end
         end
+        end
+    else
+        if ConROCApplyImbueFrame:IsShown() then ConROCApplyImbueFrame:Hide() end
     end
 --]]
 	--Rotations
@@ -817,7 +793,7 @@ end
 function ConROC:ApplyImbue(mhImbue, mhTexture, ohImbue, ohTexture)
     local _, Class, classId = UnitClass("player")
     local Color = RAID_CLASS_COLORS[Class]
-    if mhImbue ~= "none" then
+    if mhImbue ~= ("none" or nil) then
         local mhName = mhImbue;
        	local mhCast = "/cast [@none]"
        	if string.find(mhName, "Rockbiter") then
