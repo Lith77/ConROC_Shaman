@@ -6,6 +6,6 @@
 ## Dependencies: ConROC
 ## LoadOnDemand: 1
 
-Classic_era\shaman_ids.lua
-Classic_era\shaman_spellmenu.lua
-Classic_era\shaman.lua
+shaman_ids.lua
+shaman_spellmenu.lua
+shaman.lua

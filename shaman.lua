@@ -877,7 +877,7 @@ function ConROC:CreateImbueFrame()
     frame:EnableMouse(true)
     frame:SetClampedToScreen(true)
     frame:RegisterForDrag("LeftButton")
-    frame:SetClipsChildren(true)
+    frame:SetClipsChildren(false)
     frame:SetScript(
         "OnDragStart",
         function(self)
@@ -907,6 +907,38 @@ function ConROC:CreateImbueFrame()
             end
         end
     )
+    local dragFrame = CreateFrame("Frame", "ConROCApplyPoisonFrame_DragFrame", frame)
+    dragFrame:SetFrameStrata('MEDIUM')
+    dragFrame:SetFrameLevel('8')
+    dragFrame:SetSize(26, 26)
+    dragFrame:SetAlpha(1)
+    dragFrame:SetPoint("BOTTOMLEFT", frame, "TOPRIGHT", -16, -16)
+
+    -- Background texture
+    local background = dragFrame:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetTexture("Interface\\AddOns\\ConROC\\images\\move_icon")
+    background:SetDesaturated(true)
+    background:SetVertexColor(Color.r, Color.g, Color.b)
+    dragFrame.background = background
+
+    if ConROC.db.profile.unlockWindow then
+        dragFrame:Show();
+    else
+        dragFrame:Hide();
+    end
+
+    dragFrame:SetScript("OnMouseDown", function (self, otbutton, up)
+        if ConROC.db.profile.unlockWindow then
+                frame:StartMoving()
+        end
+    end)
+
+    dragFrame:SetScript("OnMouseUp", function (self, otbutton, up)
+        if ConROC.db.profile.unlockWindow then
+            frame:StopMovingOrSizing();
+        end
+    end)
     local MhBgFrame = CreateFrame("BUTTON", "ConROCMainHandBGFrame", frame, "SecureActionButtonTemplate");
     local OhBgFrame = CreateFrame("BUTTON", "ConROCOffHandBGFrame", frame, "SecureActionButtonTemplate");
     MhBgFrame:ClearAllPoints();
